@@ -31,6 +31,9 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     var iotDataManager: AWSIoTDataManager!;
     var iotManager: AWSIoTManager!;
     var iot: AWSIoT!
+    
+    var motion = CMMotionManager()
+    var timer = Timer()
 
     @IBAction func connectButtonPressed(_ sender: UIButton) {
 
@@ -301,6 +304,44 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
             let rotationString = "Rotation X: " + String(rotationX) + "\nRotation Y: " + String(rotationY) + "\nRotation Z: " + String(rotationZ)
             
             iotDataManager.publishString("\(rotationString)", onTopic:"gyroRotation", qoS:.messageDeliveryAttemptedAtMostOnce)
+        }
+        
+        startAccelerometers()
+    }
+    
+    func startAccelerometers() {
+        // Make sure the accelerometer hardware is available.
+        if self.motion.isAccelerometerAvailable {
+            self.motion.accelerometerUpdateInterval = 10.0 // 60.0  // 60 Hz
+            self.motion.startAccelerometerUpdates()
+            
+            // Configure a timer to fetch the data.
+            if #available(iOS 10.0, *) {
+                if(!timer.isValid) {
+                self.timer = Timer(fire: Date(), interval: (1.0),
+                                   repeats: true, block: { (timer) in
+                                    // Get the accelerometer data.
+                                    if let data = self.motion.accelerometerData {
+                                        let x = data.acceleration.x
+                                        let y = data.acceleration.y
+                                        let z = data.acceleration.z
+                                        
+                                        // Use the accelerometer data in your app.
+                                        print("Acceleration X: " + String(x) + "\nAcceleration Y: " + String(y) + "\nAcceleration Z: " + String(z))
+                                        print("-------------")
+                                    }
+                })
+                }
+                else{
+                    timer.invalidate()
+                }
+            } else {
+                // Fallback on earlier versions
+                print("device not supported")
+            }
+            
+            // Add the timer to the current run loop.
+            RunLoop.current.add(self.timer, forMode: .default)
         }
     }
 }
