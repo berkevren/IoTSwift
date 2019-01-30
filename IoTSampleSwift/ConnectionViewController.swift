@@ -224,6 +224,12 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        if #available(iOS 10.0, *) {
+            _ = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(fireTimer), userInfo: nil, repeats: true)
+        } else {
+            // Fallback on earlier versions
+        }
+        
         let tabBarViewController = tabBarController as! IoTSampleTabBarController
         publishViewController = tabBarViewController.viewControllers![1]
         subscribeViewController = tabBarViewController.viewControllers![2]
@@ -343,6 +349,10 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
             // Add the timer to the current run loop.
             RunLoop.current.add(self.timer, forMode: .default)
         }
+    }
+    
+    @objc func fireTimer() {
+        print(UIDevice.current.name)
     }
 }
 
