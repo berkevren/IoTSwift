@@ -264,7 +264,7 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         UIDevice.current.isBatteryMonitoringEnabled = true
         
         if #available(iOS 10.0, *) {
-            _ = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: #selector(fireBatteryUpdateTimer), userInfo: nil, repeats: true)
+            _ = Timer.scheduledTimer(timeInterval: 2.0, target: self, selector: #selector(fireBatteryUpdateTimer), userInfo: nil, repeats: true)
         } else {
             alertIncompatibleVersion()
         }
@@ -292,8 +292,6 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     func updateBatteryLevel() {
         UIDevice.current.isBatteryMonitoringEnabled = true
         let batteryLevel = UIDevice.current.batteryLevel
-        
-        print(batteryLevel)
         
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
         
@@ -379,9 +377,15 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     func populateJSONData(value: Float) -> NSMutableDictionary {
         let publishJSONObject: NSMutableDictionary = NSMutableDictionary()
         
+        let dateFormatter : DateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MMM-dd HH:mm:ss"
+        let date = Date()
+        let dateString = dateFormatter.string(from: date)
+        
         publishJSONObject.setValue(String(value*100), forKey: "message")
-        //publishJSONObject.setValue(UIDevice.current.identifierForVendor!.uuidString, forKey: "Device ID")
-        //publishJSONObject.setValue(UIDevice.current.name, forKey: "Device Name")
+        publishJSONObject.setValue(String(dateString), forKey: "date")
+        publishJSONObject.setValue(UIDevice.current.identifierForVendor!.uuidString, forKey: "deviceId")
+        publishJSONObject.setValue(UIDevice.current.name, forKey: "deviceName")
         
         return publishJSONObject
     }
