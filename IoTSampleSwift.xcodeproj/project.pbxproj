@@ -21,6 +21,19 @@
 		A6E263221C06870D0032B28D /* ConfigurationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6E263211C06870D0032B28D /* ConfigurationViewController.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		8D4E9B2122023A760099DDFE /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0A32F1D99230C34735307AD0 /* Pods_IoTSampleSwift.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_IoTSampleSwift.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0B5FE74FD1FF3A98C28670F1 /* Pods-IoTSampleSwift.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-IoTSampleSwift.debug.xcconfig"; path = "Pods/Target Support Files/Pods-IoTSampleSwift/Pods-IoTSampleSwift.debug.xcconfig"; sourceTree = "<group>"; };
@@ -132,6 +145,7 @@
 				A6B39BAF1BF3A93600045F73 /* Resources */,
 				4D1E2401B957BD82886A4683 /* [CP] Embed Pods Frameworks */,
 				5CE8A9C3E65AC8FBCD3D0E9E /* [CP] Copy Pods Resources */,
+				8D4E9B2122023A760099DDFE /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -157,6 +171,9 @@
 						LastSwiftMigration = 1010;
 						ProvisioningStyle = Automatic;
 						SystemCapabilities = {
+							com.apple.BackgroundModes = {
+								enabled = 0;
+							};
 							com.apple.Keychain = {
 								enabled = 1;
 							};
@@ -413,6 +430,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9WCG59W5KE;
 				INFOPLIST_FILE = IoTSampleSwift/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amazonaws.iot.berk;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -432,6 +450,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 9WCG59W5KE;
 				INFOPLIST_FILE = IoTSampleSwift/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.1;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.amazonaws.iot.berk;
 				PRODUCT_NAME = "$(TARGET_NAME)";

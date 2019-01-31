@@ -224,12 +224,6 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if #available(iOS 10.0, *) {
-            _ = Timer.scheduledTimer(timeInterval: 1.0, target: self, selector: #selector(fireTimer), userInfo: nil, repeats: true)
-        } else {
-            // Fallback on earlier versions
-        }
-        
         let tabBarViewController = tabBarController as! IoTSampleTabBarController
         publishViewController = tabBarViewController.viewControllers![1]
         subscribeViewController = tabBarViewController.viewControllers![2]
@@ -268,6 +262,15 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     
     @IBAction func updateBatteryLevelAction(_ sender: Any) {
         UIDevice.current.isBatteryMonitoringEnabled = true
+        
+        if #available(iOS 10.0, *) {
+            _ = Timer.scheduledTimer(timeInterval: 60.0, target: self, selector: #selector(fireBatteryUpdateTimer), userInfo: nil, repeats: true)
+        } else {
+            alertIncompatibleVersion()
+        }
+    }
+    
+    @objc func fireBatteryUpdateTimer() {
         updateBatteryLevel()
     }
     
@@ -291,11 +294,10 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         let batteryLevel = UIDevice.current.batteryLevel
         
         print(batteryLevel)
-        print(UIDevice.current.batteryState)
         
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
         
-        iotDataManager.publishString("\(batteryLevel)", onTopic:"batteryLevel", qoS:.messageDeliveryAttemptedAtMostOnce)
+        iotDataManager.publishData(createJSONTextFromValue(value: batteryLevel), onTopic: "batteryLevel", qoS: .messageDeliveryAttemptedAtMostOnce)
     }
     
     func updateGyroData() {
@@ -353,6 +355,35 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     
     @objc func fireTimer() {
         print(UIDevice.current.name)
+    }
+    
+    func alertIncompatibleVersion() {
+        let alert = UIAlertController(title: "Alert", message: "You need iOS 10.0 or newer for this feature.", preferredStyle: UIAlertController.Style.alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    func createJSONTextFromValue(value: Float) -> Data {
+        let publishJSONObject = populateJSONData(value: value)
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: publishJSONObject, options: JSONSerialization.WritingOptions()) as NSData
+            return jsonData as Data
+            
+        } catch _ {
+            let emptyData = "error".data(using: .utf8)
+            return emptyData!
+        }
+    }
+    
+    func populateJSONData(value: Float) -> NSMutableDictionary {
+        let publishJSONObject: NSMutableDictionary = NSMutableDictionary()
+        
+        publishJSONObject.setValue(String(value*100), forKey: "message")
+        //publishJSONObject.setValue(UIDevice.current.identifierForVendor!.uuidString, forKey: "Device ID")
+        //publishJSONObject.setValue(UIDevice.current.name, forKey: "Device Name")
+        
+        return publishJSONObject
     }
 }
 

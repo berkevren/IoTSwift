@@ -25,6 +25,6 @@ let CertificateSigningRequestOrganizationalUnitName = "Berk"
 let PolicyName = "IoTDemoPolicy"
 
 // This is the endpoint in your AWS IoT console. eg: https://xxxxxxxxxx.iot.<region>.amazonaws.com
-let AWSRegion = AWSRegionType.EUCentral1 // e.g. AWSRegionType.USEast1
-let IOT_ENDPOINT = "https://a3g5gcx3s4m2ka-ats.iot.eu-central-1.amazonaws.com"
+let AWSRegion = AWSRegionType.USEast1 // e.g. AWSRegionType.USEast1
+let IOT_ENDPOINT = "https://a3g5gcx3s4m2ka-ats.iot.us-east-1.amazonaws.com"
 let ASWIoTDataManager = "MyIotDataManager"
