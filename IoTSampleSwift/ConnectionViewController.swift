@@ -264,7 +264,7 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         UIDevice.current.isBatteryMonitoringEnabled = true
         
         if #available(iOS 10.0, *) {
-            _ = Timer.scheduledTimer(timeInterval: 2.0, target: self, selector: #selector(fireBatteryUpdateTimer), userInfo: nil, repeats: true)
+            _ = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(fireBatteryUpdateTimer), userInfo: nil, repeats: true)
         } else {
             alertIncompatibleVersion()
         }
