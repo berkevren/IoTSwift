@@ -7,4 +7,5 @@ target 'IoTSampleSwift' do
     $awsVersion = '~> 2.8.0'
     pod 'AWSMobileClient', $awsVersion
     pod 'AWSIoT', $awsVersion
+    pod 'AppCenter'
 end

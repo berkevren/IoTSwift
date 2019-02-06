@@ -274,6 +274,44 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         updateBatteryLevel()
     }
     
+    func updateBatteryLevel() {
+        UIDevice.current.isBatteryMonitoringEnabled = true
+        let batteryLevel = UIDevice.current.batteryLevel
+        
+        let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+        
+        iotDataManager.publishData(createJSONTextFromValue(value: batteryLevel), onTopic: "batteryLevel", qoS: .messageDeliveryAttemptedAtMostOnce)
+    }
+    
+    func createJSONTextFromValue(value: Float) -> Data {
+        let publishJSONObject = populateJSONData(value: value)
+        
+        do {
+            let jsonData = try JSONSerialization.data(withJSONObject: publishJSONObject, options: JSONSerialization.WritingOptions()) as NSData
+            return jsonData as Data
+            
+        } catch _ {
+            let emptyData = "error".data(using: .utf8)
+            return emptyData!
+        }
+    }
+    
+    func populateJSONData(value: Float) -> NSMutableDictionary {
+        let publishJSONObject: NSMutableDictionary = NSMutableDictionary()
+        
+        let dateFormatter : DateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MMM-dd HH:mm:ss"
+        let date = Date()
+        let dateString = dateFormatter.string(from: date)
+        
+        publishJSONObject.setValue(String(value*100), forKey: "batteryLevel")
+        publishJSONObject.setValue(String(dateString), forKey: "date")
+        publishJSONObject.setValue(UIDevice.current.identifierForVendor!.uuidString, forKey: "deviceId")
+        publishJSONObject.setValue(UIDevice.current.name, forKey: "deviceName")
+        
+        return publishJSONObject
+    }
+    
     @IBAction func updateGyroDataAction(_ sender: Any) {
         
         if #available(iOS 10.0, *) {
@@ -289,15 +327,6 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         }
     }
     
-    func updateBatteryLevel() {
-        UIDevice.current.isBatteryMonitoringEnabled = true
-        let batteryLevel = UIDevice.current.batteryLevel
-        
-        let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
-        
-        iotDataManager.publishData(createJSONTextFromValue(value: batteryLevel), onTopic: "batteryLevel", qoS: .messageDeliveryAttemptedAtMostOnce)
-    }
-    
     func updateGyroData() {
         let motionManager = CMMotionManager()
         motionManager.startGyroUpdates()
@@ -308,11 +337,11 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
             let rotationZ = gyroData.rotationRate.z
             
             let rotationString = "Rotation X: " + String(rotationX) + "\nRotation Y: " + String(rotationY) + "\nRotation Z: " + String(rotationZ)
-            
-            iotDataManager.publishString("\(rotationString)", onTopic:"gyroRotation", qoS:.messageDeliveryAttemptedAtMostOnce)
+            print(rotationString)
+            //iotDataManager.publishString("\(rotationString)", onTopic:"gyroRotation", qoS:.messageDeliveryAttemptedAtMostOnce)
         }
         
-        startAccelerometers()
+        //startAccelerometers()
     }
     
     func startAccelerometers() {
@@ -359,35 +388,6 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         let alert = UIAlertController(title: "Alert", message: "You need iOS 10.0 or newer for this feature.", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
-    }
-    
-    func createJSONTextFromValue(value: Float) -> Data {
-        let publishJSONObject = populateJSONData(value: value)
-        
-        do {
-            let jsonData = try JSONSerialization.data(withJSONObject: publishJSONObject, options: JSONSerialization.WritingOptions()) as NSData
-            return jsonData as Data
-            
-        } catch _ {
-            let emptyData = "error".data(using: .utf8)
-            return emptyData!
-        }
-    }
-    
-    func populateJSONData(value: Float) -> NSMutableDictionary {
-        let publishJSONObject: NSMutableDictionary = NSMutableDictionary()
-        
-        let dateFormatter : DateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MMM-dd HH:mm:ss"
-        let date = Date()
-        let dateString = dateFormatter.string(from: date)
-        
-        publishJSONObject.setValue(String(value*100), forKey: "message")
-        publishJSONObject.setValue(String(dateString), forKey: "date")
-        publishJSONObject.setValue(UIDevice.current.identifierForVendor!.uuidString, forKey: "deviceId")
-        publishJSONObject.setValue(UIDevice.current.name, forKey: "deviceName")
-        
-        return publishJSONObject
     }
 }
 
