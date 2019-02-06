@@ -31,10 +31,10 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     var iotDataManager: AWSIoTDataManager!;
     var iotManager: AWSIoTManager!;
     var iot: AWSIoT!
-    
-    var motion = CMMotionManager()
-    var timer = Timer()
 
+    private var gyroPresent = false
+    private var gyroMotionManager : CMMotionManager?
+    
     @IBAction func connectButtonPressed(_ sender: UIButton) {
 
         let tabBarViewController = tabBarController as! IoTSampleTabBarController
@@ -277,14 +277,15 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     func updateBatteryLevel() {
         UIDevice.current.isBatteryMonitoringEnabled = true
         let batteryLevel = UIDevice.current.batteryLevel
+        let batteryLevelDictionary : NSDictionary = ["batteryLevel": String(batteryLevel)]
+        let batteryLevelTopicName = "batteryLevel"
         
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
-        
-        iotDataManager.publishData(createJSONTextFromValue(value: batteryLevel), onTopic: "batteryLevel", qoS: .messageDeliveryAttemptedAtMostOnce)
+        iotDataManager.publishData(createJSONTextFromValue(dictionary: batteryLevelDictionary), onTopic: batteryLevelTopicName, qoS: .messageDeliveryAttemptedAtMostOnce)
     }
     
-    func createJSONTextFromValue(value: Float) -> Data {
-        let publishJSONObject = populateJSONData(value: value)
+    func createJSONTextFromValue(dictionary: NSDictionary) -> Data {
+        let publishJSONObject = populateJSONData(dictionary: dictionary)
         
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: publishJSONObject, options: JSONSerialization.WritingOptions()) as NSData
@@ -296,96 +297,66 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         }
     }
     
-    func populateJSONData(value: Float) -> NSMutableDictionary {
+    func populateJSONData(dictionary: NSDictionary) -> NSMutableDictionary {
         let publishJSONObject: NSMutableDictionary = NSMutableDictionary()
         
-        let dateFormatter : DateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MMM-dd HH:mm:ss"
-        let date = Date()
-        let dateString = dateFormatter.string(from: date)
+        for (key, value) in dictionary {
+            publishJSONObject.setValue(value, forKey: key as! String)
+        }
         
-        publishJSONObject.setValue(String(value*100), forKey: "batteryLevel")
-        publishJSONObject.setValue(String(dateString), forKey: "date")
+        publishJSONObject.setValue(getDateToPublish(), forKey: "date")
         publishJSONObject.setValue(UIDevice.current.identifierForVendor!.uuidString, forKey: "deviceId")
         publishJSONObject.setValue(UIDevice.current.name, forKey: "deviceName")
         
         return publishJSONObject
     }
     
+    func getDateToPublish() -> String {
+        let dateFormatter : DateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MMM-dd HH:mm:ss"
+        let date = Date()
+        return dateFormatter.string(from: date)
+    }
+    
     @IBAction func updateGyroDataAction(_ sender: Any) {
-        
-        if #available(iOS 10.0, *) {
-            let gyroUpdateTimer = Timer(fire: Date(), interval: (1.0/60.0),
-                                        repeats: true, block: { (timer) in
-                                            self.updateGyroData()
-            })
-            
-            RunLoop.current.add(gyroUpdateTimer, forMode: RunLoop.Mode.default)
-        } else {
-            updateGyroData()
-            // Fallback on earlier versions
-        }
+        updateGyroData()
     }
     
     func updateGyroData() {
-        let motionManager = CMMotionManager()
-        motionManager.startGyroUpdates()
+        self.gyroMotionManager = CMMotionManager()
         
-        if let gyroData = motionManager.gyroData {
-            let rotationX = gyroData.rotationRate.x
-            let rotationY = gyroData.rotationRate.y
-            let rotationZ = gyroData.rotationRate.z
-            
-            let rotationString = "Rotation X: " + String(rotationX) + "\nRotation Y: " + String(rotationY) + "\nRotation Z: " + String(rotationZ)
-            print(rotationString)
-            //iotDataManager.publishString("\(rotationString)", onTopic:"gyroRotation", qoS:.messageDeliveryAttemptedAtMostOnce)
+        self.gyroPresent = self.gyroMotionManager!.isGyroAvailable
+        guard self.gyroPresent else {
+            alertGyroUnavailable()
+            return
         }
         
-        //startAccelerometers()
-    }
-    
-    func startAccelerometers() {
-        // Make sure the accelerometer hardware is available.
-        if self.motion.isAccelerometerAvailable {
-            self.motion.accelerometerUpdateInterval = 10.0 // 60.0  // 60 Hz
-            self.motion.startAccelerometerUpdates()
-            
-            // Configure a timer to fetch the data.
-            if #available(iOS 10.0, *) {
-                if(!timer.isValid) {
-                self.timer = Timer(fire: Date(), interval: (1.0),
-                                   repeats: true, block: { (timer) in
-                                    // Get the accelerometer data.
-                                    if let data = self.motion.accelerometerData {
-                                        let x = data.acceleration.x
-                                        let y = data.acceleration.y
-                                        let z = data.acceleration.z
-                                        
-                                        // Use the accelerometer data in your app.
-                                        print("Acceleration X: " + String(x) + "\nAcceleration Y: " + String(y) + "\nAcceleration Z: " + String(z))
-                                        print("-------------")
-                                    }
-                })
-                }
-                else{
-                    timer.invalidate()
-                }
-            } else {
-                // Fallback on earlier versions
-                print("device not supported")
+        self.gyroMotionManager!.gyroUpdateInterval = 0.5
+        let gyroTopicName = "gyroData"
+        
+        // remember to stop it.. with:      self.manager?.stopGyroUpdates()
+        self.gyroMotionManager!.startGyroUpdates(to: OperationQueue.main) { (data: CMGyroData?, error: Error?) in
+            if let gyroData = data?.rotationRate{
+                let gyroDictionary : NSDictionary = [
+                    "gyroscopeX" : gyroData.x,
+                    "gyroscopeY" : gyroData.y,
+                    "gyroscopeZ" : gyroData.z
+                ]
+                
+                let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+                iotDataManager.publishData(self.createJSONTextFromValue(dictionary: gyroDictionary), onTopic: gyroTopicName, qoS: .messageDeliveryAttemptedAtMostOnce)
             }
-            
-            // Add the timer to the current run loop.
-            RunLoop.current.add(self.timer, forMode: .default)
         }
-    }
-    
-    @objc func fireTimer() {
-        print(UIDevice.current.name)
     }
     
     func alertIncompatibleVersion() {
         let alert = UIAlertController(title: "Alert", message: "You need iOS 10.0 or newer for this feature.", preferredStyle: UIAlertController.Style.alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
+    }
+    
+    func alertGyroUnavailable() {
+        let alert = UIAlertController(title: "Alert", message: "Gyroscope not available.", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
