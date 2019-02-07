@@ -17,6 +17,7 @@ import UIKit
 import AWSIoT
 import AWSMobileClient
 import CoreMotion
+import AVFoundation
 
 class ConnectionViewController: UIViewController, UITextViewDelegate {
 
@@ -260,6 +261,16 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
     }
     
+    @IBAction func turnFlashOnAction(_ sender: Any) {
+        let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+        iotDataManager.publishString("0", onTopic: "torch", qoS: .messageDeliveryAttemptedAtMostOnce)
+    }
+    
+    @IBAction func turnFlashOffAction(_ sender: Any) {
+        let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+        iotDataManager.publishString("1", onTopic: "torch", qoS: .messageDeliveryAttemptedAtMostOnce)
+    }
+    
     @IBAction func updateBatteryLevelAction(_ sender: Any) {
         UIDevice.current.isBatteryMonitoringEnabled = true
         
@@ -275,6 +286,7 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     }
     
     func updateBatteryLevel() {
+        
         UIDevice.current.isBatteryMonitoringEnabled = true
         let batteryLevel = UIDevice.current.batteryLevel
         let batteryLevelDictionary : NSDictionary = ["batteryLevel": String(batteryLevel)]

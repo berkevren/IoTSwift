@@ -72,6 +72,22 @@
                                     <action selector="updateGyroDataAction:" destination="9pv-A4-QxB" eventType="touchUpInside" id="r7e-z7-uMj"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Oh5-gw-Smm">
+                                <rect key="frame" x="36" y="63" width="95" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Turn Flash On"/>
+                                <connections>
+                                    <action selector="turnFlashOnAction:" destination="9pv-A4-QxB" eventType="touchUpInside" id="Osj-HF-UcR"/>
+                                </connections>
+                            </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="xu9-CT-QH6">
+                                <rect key="frame" x="263" y="63" width="97" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Turn Flash Off"/>
+                                <connections>
+                                    <action selector="turnFlashOffAction:" destination="9pv-A4-QxB" eventType="touchUpInside" id="gqy-pZ-aNe"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -105,15 +121,14 @@
                         <subviews>
                             <stackView opaque="NO" contentMode="scaleToFill" misplaced="YES" axis="vertical" spacing="10" translatesAutoresizingMaskIntoConstraints="NO" id="bGP-dm-c7e" userLabel="Root Stack View">
                                 <rect key="frame" x="-48" y="250" width="343" height="598"/>
-                                <subviews>
-                                    <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="25" minValue="1" maxValue="50" translatesAutoresizingMaskIntoConstraints="NO" id="poC-3V-APO">
-                                        <rect key="frame" x="-2" y="0.0" width="347" height="599"/>
-                                        <connections>
-                                            <action selector="sliderValueChanged:" destination="8rJ-Kc-sve" eventType="valueChanged" id="LDZ-Hv-J5a"/>
-                                        </connections>
-                                    </slider>
-                                </subviews>
                             </stackView>
+                            <slider opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="25" minValue="1" maxValue="50" translatesAutoresizingMaskIntoConstraints="NO" id="poC-3V-APO">
+                                <rect key="frame" x="14" y="0.0" width="347" height="599"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <connections>
+                                    <action selector="sliderValueChanged:" destination="8rJ-Kc-sve" eventType="valueChanged" id="LDZ-Hv-J5a"/>
+                                </connections>
+                            </slider>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>

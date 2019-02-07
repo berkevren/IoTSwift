@@ -15,6 +15,7 @@
 
 import UIKit
 import AWSIoT
+import AVFoundation
 
 class SubscribeViewController: UIViewController {
 
@@ -46,12 +47,50 @@ class SubscribeViewController: UIViewController {
                 self.present(alert, animated: true, completion: nil)
             }
         } )
+        
+        let flashlightTopic = "torch"
+        iotDataManager.subscribe(toTopic: flashlightTopic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
+            (torchtoggle) ->Void in
+            let stringValue = NSString(data: torchtoggle, encoding: String.Encoding.utf8.rawValue)!
+            
+            print("received: \(stringValue)")
+            if(stringValue.floatValue == 0) {
+                print("should toggle on")
+                self.toggleTorch(on: true)
+            } else {
+                print("should toggle off")
+                self.toggleTorch(on: false)
+            }
+        } )
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
         let tabBarViewController = tabBarController as! IoTSampleTabBarController
         iotDataManager.unsubscribeTopic(tabBarViewController.topic)
+    }
+    
+    func toggleTorch(on: Bool) {
+        guard let device = AVCaptureDevice.default(for: AVMediaType.video)
+            else {return}
+        
+        if device.hasTorch {
+            do {
+                try device.lockForConfiguration()
+                
+                if on == true {
+                    device.torchMode = .on
+                } else {
+                    device.torchMode = .off
+                }
+                
+                device.unlockForConfiguration()
+            } catch {
+                print("Torch could not be used")
+            }
+        } else {
+            print("Torch is not available")
+        }
     }
 }
 
