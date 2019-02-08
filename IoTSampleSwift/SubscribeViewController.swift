@@ -130,14 +130,18 @@ class SubscribeViewController: UIViewController {
     
     func openCamera() {
         if UIImagePickerController.isSourceTypeAvailable(.camera) {
-            let imagePicker = UIImagePickerController()
-            imagePicker.delegate = self as? UIImagePickerControllerDelegate & UINavigationControllerDelegate
-            imagePicker.sourceType = .camera;
-            imagePicker.allowsEditing = false
-            self.present(imagePicker, animated: true, completion: nil)
+            presentCamera()
         } else {
             alertMessage(message: "Camera not available")
         }
+    }
+    
+    func presentCamera() {
+        let imagePicker = UIImagePickerController()
+        imagePicker.delegate = self as? UIImagePickerControllerDelegate & UINavigationControllerDelegate
+        imagePicker.sourceType = .camera;
+        imagePicker.allowsEditing = false
+        self.present(imagePicker, animated: true, completion: nil)
     }
     
     func actAlertMessageDesiredState(payload: Data) {
