@@ -20,6 +20,9 @@ import AVFoundation
 class SubscribeViewController: UIViewController {
 
     @IBOutlet weak var subscribeSlider: UISlider!
+    let awsShadowGetTopic = "$aws/things/berksiphone/shadow/get"
+    let awsShadowGetAcceptedTopic = "$aws/things/berksiphone/shadow/get/accepted"
+    let flashlightTopic = "torch"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,61 +33,59 @@ class SubscribeViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
-        let tabBarViewController = tabBarController as! IoTSampleTabBarController
-
-        iotDataManager.subscribe(toTopic: tabBarViewController.topic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
-            (payload) ->Void in
-            let stringValue = NSString(data: payload, encoding: String.Encoding.utf8.rawValue)!
-            
-            print("received: \(stringValue)")
-            DispatchQueue.main.async {
-                self.subscribeSlider.value = stringValue.floatValue
-            }
-            
-            if ( (Double(String(stringValue)) ?? 0) > 30.0) {
-                let alert = UIAlertController(title: "Alert", message: "Slider has gone higher than 30. Please reduce.", preferredStyle: UIAlertController.Style.alert)
-                alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
-                self.present(alert, animated: true, completion: nil)
-            }
-        } )
+        let connectionViewController = ConnectionViewController()
         
-        let flashlightTopic = "torch"
         iotDataManager.subscribe(toTopic: flashlightTopic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
-            (torchtoggle) ->Void in
-            let stringValue = NSString(data: torchtoggle, encoding: String.Encoding.utf8.rawValue)!
-            
-            print("received: \(stringValue)")
-            if(stringValue.floatValue == 0) {
-                print("should toggle on")
-                self.toggleTorch(on: true)
-            } else {
-                print("should toggle off")
-                self.toggleTorch(on: false)
-            }
+            (payload) ->Void in
+            self.actTorchToggle(payload: payload)
         } )
         
-        iotDataManager.publishString("{}", onTopic: "$aws/things/berksiphone/shadow/get", qoS: .messageDeliveryAttemptedAtMostOnce)
-        iotDataManager.subscribe(toTopic: "$aws/things/berksiphone/shadow/get/accepted", qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
+        iotDataManager.subscribe(toTopic: awsShadowGetAcceptedTopic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
             (payload) ->Void in
-            let stringValue = NSString(data: payload, encoding: String.Encoding.utf8.rawValue)!
-            
-            //print("received: \(stringValue)")
-            
-            do {
-                let json = try JSONSerialization.jsonObject(with: payload, options: []) as? [String: Any]
-                let jsonState = json?["state"] as? NSDictionary
-                let jsonStateDesired = jsonState?["desired"] as? NSDictionary
-                print(jsonStateDesired)
-            } catch {
-                print(error.localizedDescription)
-            }
+            self.actTorchDesiredState(payload: payload)
+            self.actCameraDesiredState(payload: payload)
+            self.actAlertMessageDesiredState(payload: payload)
             })
+        
+        if #available(iOS 10.0, *) {
+            _ = Timer.scheduledTimer(timeInterval: 10.0, target: self, selector: #selector(getShadowState), userInfo: nil, repeats: true)
+        } else {
+            connectionViewController.alertIncompatibleVersion()
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
         let tabBarViewController = tabBarController as! IoTSampleTabBarController
         iotDataManager.unsubscribeTopic(tabBarViewController.topic)
+    }
+    
+    func actTorchToggle(payload: Data) {
+        let stringValue = NSString(data: payload, encoding: String.Encoding.utf8.rawValue)!
+        
+        if(stringValue.floatValue == 0) {
+            self.toggleTorch(on: true)
+        } else {
+            self.toggleTorch(on: false)
+        }
+    }
+    
+    func actTorchDesiredState(payload: Data) {
+        do {
+            let json = try JSONSerialization.jsonObject(with: payload, options: []) as? [String: Any]
+            let jsonState = json?["state"] as? NSDictionary
+            let jsonStateDesired = jsonState?["desired"] as? NSDictionary
+            let jsonStateDesiredFlashlightStatus = jsonStateDesired?["flashlight"] as! String
+            
+            if(jsonStateDesiredFlashlightStatus == "on") {
+                self.toggleTorch(on: true)
+            } else {
+                self.toggleTorch(on: false)
+            }
+            
+        } catch {
+            print(error.localizedDescription)
+        }
     }
     
     func toggleTorch(on: Bool) {
@@ -103,11 +104,69 @@ class SubscribeViewController: UIViewController {
                 
                 device.unlockForConfiguration()
             } catch {
-                print("Torch could not be used")
+                alertMessage(message: "Flashlight could not be used")
             }
         } else {
-            print("Torch is not available")
+            alertMessage(message: "Flashlight is not available")
         }
+    }
+    
+    func actCameraDesiredState(payload: Data) {
+        do {
+            let json = try JSONSerialization.jsonObject(with: payload, options: []) as? [String: Any]
+            let jsonState = json?["state"] as? NSDictionary
+            let jsonStateDesired = jsonState?["desired"] as? NSDictionary
+            let jsonStateDesiredFlashlightStatus = jsonStateDesired?["camera"] as! String
+            print(jsonStateDesiredFlashlightStatus)
+            
+            if(jsonStateDesiredFlashlightStatus == "on") {
+                self.openCamera()
+            }
+            
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    func openCamera() {
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let imagePicker = UIImagePickerController()
+            imagePicker.delegate = self as? UIImagePickerControllerDelegate & UINavigationControllerDelegate
+            imagePicker.sourceType = .camera;
+            imagePicker.allowsEditing = false
+            self.present(imagePicker, animated: true, completion: nil)
+        } else {
+            alertMessage(message: "Camera not available")
+        }
+    }
+    
+    func actAlertMessageDesiredState(payload: Data) {
+        do {
+            let json = try JSONSerialization.jsonObject(with: payload, options: []) as? [String: Any]
+            let jsonState = json?["state"] as? NSDictionary
+            let jsonStateDesired = jsonState?["desired"] as? NSDictionary
+            let jsonStateDesiredAlertStatus = jsonStateDesired?["alertmessage"] as! String
+            let jsonStateDesiredAlertMessage = jsonStateDesired?["message"] as! String
+            
+            if(jsonStateDesiredAlertStatus == "on") {
+                alertMessage(message: jsonStateDesiredAlertMessage)
+            }
+            
+        } catch {
+            print(error.localizedDescription)
+        }
+    }
+    
+    @objc func getShadowState() {
+        let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+        let emptyJSON: Data? = "{}".data(using: .utf8)
+        iotDataManager.publishData(emptyJSON!, onTopic: awsShadowGetTopic, qoS: .messageDeliveryAttemptedAtMostOnce)
+    }
+    
+    func alertMessage(message: String) {
+        let alert = UIAlertController(title: "Attention", message: message, preferredStyle: UIAlertController.Style.alert)
+        alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
+        self.present(alert, animated: true, completion: nil)
     }
 }
 
