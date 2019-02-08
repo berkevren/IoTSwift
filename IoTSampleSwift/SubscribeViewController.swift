@@ -62,6 +62,23 @@ class SubscribeViewController: UIViewController {
                 self.toggleTorch(on: false)
             }
         } )
+        
+        iotDataManager.publishString("{}", onTopic: "$aws/things/berksiphone/shadow/get", qoS: .messageDeliveryAttemptedAtMostOnce)
+        iotDataManager.subscribe(toTopic: "$aws/things/berksiphone/shadow/get/accepted", qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
+            (payload) ->Void in
+            let stringValue = NSString(data: payload, encoding: String.Encoding.utf8.rawValue)!
+            
+            //print("received: \(stringValue)")
+            
+            do {
+                let json = try JSONSerialization.jsonObject(with: payload, options: []) as? [String: Any]
+                let jsonState = json?["state"] as? NSDictionary
+                let jsonStateDesired = jsonState?["desired"] as? NSDictionary
+                print(jsonStateDesired)
+            } catch {
+                print(error.localizedDescription)
+            }
+            })
     }
 
     override func viewWillDisappear(_ animated: Bool) {
