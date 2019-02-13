@@ -15,9 +15,6 @@
 
 import UIKit
 import AWSCore
-import AppCenter
-import AppCenterAnalytics
-import AppCenterCrashes
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -36,9 +33,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Setting up logging to xcode console.
         AWSDDLog.sharedInstance.logLevel = .debug
         AWSDDLog.add(AWSDDTTYLogger.sharedInstance)
-        
-        // Hockey App Settings
-        MSAppCenter.start("f2a21df9-90fe-4ec0-8892-9499bb8d16e0", withServices:[ MSAnalytics.self, MSCrashes.self ])
 
         return true
     }
