@@ -261,6 +261,20 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
     }
     
+    @IBAction func phoneTorchAction(_ sender: Any) {
+        let flashlightTopic = "torch"
+        let iotTorchDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+        iotTorchDataManager.subscribe(toTopic: flashlightTopic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
+            (payload) ->Void in
+            let stringValue = NSString(data: payload, encoding: String.Encoding.utf8.rawValue)!
+            if(stringValue.floatValue == 0) {
+                self.toggleTorch(on: true)
+            }
+            else {
+                self.toggleTorch(on: false)
+            }
+        } )
+    }
     @IBAction func turnFlashOnAction(_ sender: Any) {
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
         iotDataManager.publishString("0", onTopic: "torch", qoS: .messageDeliveryAttemptedAtMostOnce)
@@ -371,6 +385,31 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
         let alert = UIAlertController(title: "Alert", message: "Gyroscope not available.", preferredStyle: UIAlertController.Style.alert)
         alert.addAction(UIAlertAction(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         self.present(alert, animated: true, completion: nil)
+    }
+    
+    func toggleTorch(on: Bool) {
+        guard let device = AVCaptureDevice.default(for: AVMediaType.video)
+            else {return}
+        
+        if device.hasTorch {
+            do {
+                try device.lockForConfiguration()
+                
+                if on == true {
+                    device.torchMode = .on
+                    print("should torch")
+                } else {
+                    device.torchMode = .off
+                    print("should NOT torch")
+                }
+                
+                device.unlockForConfiguration()
+            } catch {
+                print("Flashlight could not be used")
+            }
+        } else {
+            print("Flashlight is not available")
+        }
     }
 }
 

@@ -22,7 +22,6 @@ class SubscribeViewController: UIViewController {
     @IBOutlet weak var subscribeSlider: UISlider!
     let awsShadowGetTopic = "$aws/things/berksiphone/shadow/get"
     let awsShadowGetAcceptedTopic = "$aws/things/berksiphone/shadow/get/accepted"
-    let flashlightTopic = "torch"
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -34,11 +33,6 @@ class SubscribeViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         let iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
         let connectionViewController = ConnectionViewController()
-        
-        iotDataManager.subscribe(toTopic: flashlightTopic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
-            (payload) ->Void in
-            self.actTorchToggle(payload: payload)
-        } )
         
         iotDataManager.subscribe(toTopic: awsShadowGetAcceptedTopic, qoS: .messageDeliveryAttemptedAtMostOnce, messageCallback: {
             (payload) ->Void in

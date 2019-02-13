@@ -88,6 +88,14 @@
                                     <action selector="turnFlashOffAction:" destination="9pv-A4-QxB" eventType="touchUpInside" id="gqy-pZ-aNe"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="kkI-ec-b3n">
+                                <rect key="frame" x="144" y="165" width="86" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" title="Phone Torch"/>
+                                <connections>
+                                    <action selector="phoneTorchAction:" destination="9pv-A4-QxB" eventType="touchUpInside" id="MKD-bZ-OsN"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
