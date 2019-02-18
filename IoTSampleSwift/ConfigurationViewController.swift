@@ -15,11 +15,15 @@
 
 import UIKit
 import AWSIoT
+import CoreLocation
 
 class ConfigurationViewController: UIViewController, UITextFieldDelegate {
     
     @IBOutlet weak var deleteCertificateButton: UIButton!
     @IBOutlet weak var topicTextField: UITextField!
+    
+    // location stuff
+    var locationManager:CLLocationManager!
 
     @IBAction func deleteCertificateButtonPressed(_ sender: AnyObject) {
         let actionController: UIAlertController = UIAlertController( title: nil, message: nil, preferredStyle: .actionSheet)
@@ -188,5 +192,36 @@ class ConfigurationViewController: UIViewController, UITextFieldDelegate {
         {
             deleteCertificateButton.isHidden=false
         }
+        
+        determineMyCurrentLocation()
+    }
+    
+    func determineMyCurrentLocation() {
+        locationManager = CLLocationManager()
+        locationManager.delegate = self as? CLLocationManagerDelegate
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.requestAlwaysAuthorization()
+        
+        if CLLocationManager.locationServicesEnabled() {
+            locationManager.startUpdatingLocation()
+            //locationManager.startUpdatingHeading()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let userLocation:CLLocation = locations[0] as CLLocation
+        
+        // Call stopUpdatingLocation() to stop listening for location updates,
+        // other wise this function will be called every time when user location changes.
+        
+        // manager.stopUpdatingLocation()
+        
+        print("user latitude = \(userLocation.coordinate.latitude)")
+        print("user longitude = \(userLocation.coordinate.longitude)")
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error)
+    {
+        print("Error \(error)")
     }
 }
