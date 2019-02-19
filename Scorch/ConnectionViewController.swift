@@ -18,8 +18,9 @@ import AWSIoT
 import AWSMobileClient
 import CoreMotion
 import AVFoundation
+import CoreLocation
 
-class ConnectionViewController: UIViewController, UITextViewDelegate {
+class ConnectionViewController: UIViewController, UITextViewDelegate, CLLocationManagerDelegate {
 
     @IBOutlet weak var activityIndicatorView: UIActivityIndicatorView!
     @IBOutlet weak var logTextView: UITextView!
@@ -32,6 +33,9 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
     var iotDataManager: AWSIoTDataManager!;
     var iotManager: AWSIoTManager!;
     var iot: AWSIoT!
+    
+    // location stuff
+    var locationManager:CLLocationManager!
 
     private var gyroPresent = false
     private var gyroMotionManager : CMMotionManager?
@@ -259,6 +263,79 @@ class ConnectionViewController: UIViewController, UITextViewDelegate {
 
         AWSIoTDataManager.register(with: iotDataConfiguration!, forKey: ASWIoTDataManager)
         iotDataManager = AWSIoTDataManager(forKey: ASWIoTDataManager)
+    }
+    
+    @IBAction func printLocationAction(_ sender: Any) {
+        determineMyCurrentLocation()
+    }
+    
+    func determineMyCurrentLocation() {
+        locationManager = CLLocationManager()
+        locationManager.delegate = self
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.requestAlwaysAuthorization()
+        
+        if CLLocationManager.locationServicesEnabled() {
+            locationManager.startUpdatingLocation()
+            //locationManager.startUpdatingHeading()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let userLocation:CLLocation = locations[0] as CLLocation
+        
+        // Call stopUpdatingLocation() to stop listening for location updates,
+        // other wise this function will be called every time when user location changes.
+        
+        // manager.stopUpdatingLocation()
+        
+        let latitude = userLocation.coordinate.latitude
+        let longitude = userLocation.coordinate.longitude
+        
+        getAddressFromLatLon(latitude: latitude, longitude: longitude)
+        locationManager.stopUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error)
+    {
+        print("Error \(error)")
+    }
+    
+    func getAddressFromLatLon(latitude: Double, longitude: Double) {
+        
+        let geocoder: CLGeocoder = CLGeocoder()
+        let loc: CLLocation = CLLocation(latitude:latitude, longitude: longitude)
+        
+        geocoder.reverseGeocodeLocation(loc, completionHandler:
+            {(placemarks, error) in
+                if (error != nil)
+                {
+                    print("reverse geodcode fail: \(error!.localizedDescription)")
+                }
+                let placemarks = placemarks! as [CLPlacemark]
+                
+                if placemarks.count > 0 {
+                    let placemark = placemarks[0]
+                    var addressString : String = ""
+                    if placemark.subLocality != nil {
+                        addressString = addressString + placemark.subLocality! + ", "
+                    }
+                    if placemark.thoroughfare != nil {
+                        addressString = addressString + placemark.thoroughfare! + ", "
+                    }
+                    if placemark.locality != nil {
+                        addressString = addressString + placemark.locality! + ", "
+                    }
+                    if placemark.country != nil {
+                        addressString = addressString + placemark.country! + ", "
+                    }
+                    if placemark.postalCode != nil {
+                        addressString = addressString + placemark.postalCode! + " "
+                    }
+                    
+                    print(addressString)
+                }
+        })
     }
     
     @IBAction func phoneTorchAction(_ sender: Any) {

@@ -4,7 +4,7 @@
 <dict>
 	<key>keychain-access-groups</key>
 	<array>
-		<string>$(AppIdentifierPrefix)Amazon-Web-Services.IoTSampleSwift</string>
+		<string>$(AppIdentifierPrefix)Amazon-Web-Services.Scorch</string>
 	</array>
 </dict>
 </plist>
